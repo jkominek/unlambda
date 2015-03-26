@@ -2,8 +2,9 @@
 
 (define current-character (make-parameter #f))
 
-(define (d x y)
-  (unlambda-app x y))
+; d is special and receives its first argument as a thunk
+(define ((d x) y)
+  (unlambda-app (x) y))
 (define (i x)
   x)
 (define (c x)
@@ -14,9 +15,9 @@
   (exit))
 (define (v x)
   v)
-(define (s x y z)
+(define (((s x) y) z)
   (unlambda-app (unlambda-app x z) (unlambda-app y z)))
-(define (k x y)
+(define ((k x) y)
   x)
 (define (%dot c)
   (lambda (x)
@@ -47,20 +48,13 @@
        (%dot (current-character))
        v)))
 
-(define (d-helper thunk)
-  (lambda (arg)
-    (unlambda-app (thunk) arg)))
+(define (applyer function thunk)
+  (if (equal? function d)
+      (d thunk)
+      (function (thunk))))
 
 (define-syntax-rule (unlambda-app x y)
-  (let ([f x])
-    (case (#%plain-app procedure-arity f)
-      [(0) (#%plain-app error "evaluation weirdness")]
-      [(1) (#%plain-app f y)]
-      [(2) (if (#%plain-app equal? f d)
-	       (#%plain-app d-helper (lambda () y))
-	       (let ([a y]) (lambda (b) (#%plain-app f a b))))]
-      [(3)  (let ([a y]) (lambda (b c) (#%plain-app f a b c)))]
-      [else (#%plain-app error "evaluation weirdness")])))
+  (#%plain-app applyer x (lambda () y)))
 
 (define-syntax-rule (unlambda-module-begin body ...)
   (#%plain-module-begin
