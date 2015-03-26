@@ -12,6 +12,8 @@
      #f
      (case c
        [(#\`) `(,(read-term src port) ,(read-term src port))]
+       [(#\") `(%define ,(string->symbol (string (read-char port)))
+		 ,(read-term src port))]
        [(#\.) `(%dot ,(read-char port))]
        [(#\?) `(%question ,(read-char port))]
        [(#\@) 'at]
