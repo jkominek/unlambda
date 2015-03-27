@@ -1,8 +1,13 @@
 #lang racket/base
 
-(require (for-syntax racket/base syntax/strip-context))
+(require (for-syntax racket/base
+		     syntax/strip-context)
+	 racket/contract)
 
 (define current-character (make-parameter #f))
+
+(define one-arg-lambda
+  (recursive-contract (-> one-arg-lambda one-arg-lambda)))
 
 ; d is special and receives its first argument as a thunk
 (define ((d x) y)
@@ -68,7 +73,7 @@
 	  (provide #,a-d-o)))]))
 
 (define-syntax-rule (unlambda-define name value)
-  (define name (procedure-rename value 'name)))
+  (define/contract name one-arg-lambda (procedure-rename value 'name)))
 
 (provide s k i d e v c r at pipe %dot %question #%datum all-defined-out
          (rename-out [unlambda-app #%app]
