@@ -6,7 +6,6 @@ syntax to provide a function from the module. For instance, the program "Ii
 will provide the identity function as 'I'.
 
 Todo items:
-* Maintain source location information
-* Test cases
 * DrRacket integration
+* Test cases
 * ???
