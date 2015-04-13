@@ -66,11 +66,18 @@
 (define-syntax (unlambda-module-begin stx)
   (syntax-case stx ()
     [(_ )
-     #`(#%module-begin (void))]
+     #`(#%module-begin
+	(module configure-runtime racket/base
+	 (#%require unlambda/parser)
+	 (current-read-interaction read-term))
+	(void))]
     [(_ body ...)
      (let ([a-d-o (replace-context (car (syntax-e #'(body ...)))
 				   #'(all-defined-out))])
        #`(#%module-begin
+	  (module configure-runtime racket/base
+	   (#%require unlambda/parser)
+	   (current-read-interaction read-term))
 	  body ...
 	  (provide #,a-d-o)))]))
 
