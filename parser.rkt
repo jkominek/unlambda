@@ -1,6 +1,28 @@
 #lang racket/base
 
-(provide read-term)
+(provide read-term color-lexer)
+
+(define (color-lexer port)
+  (define-values (line column position) (port-next-location port))
+  (define c (read-char port))
+
+  (cond
+   [(eof-object? c)
+    (values #f 'eof #f #f #f)]
+   [(char-whitespace? c)
+    (values #f 'white-space #f position (+ 1 position))]
+   [else
+    (case c
+      [(#\` #\~)
+       (values #f 'parenthesis #f position (+ 1 position))]
+
+      [(#\. #\?)
+       (if (eof-object? (read-char port))
+	   (values #f 'string #f position (+ 1 position))
+	   (values #f 'string #f position (+ 2 position)))]
+
+      [else
+       (values c 'symbol #f position (+ 1 position))])]))
 
 (define (read-term src [port (current-input-port)])
   (define-values (line column position) (port-next-location port))
@@ -18,22 +40,27 @@
        (let ([a (read-term src port)]
 	     [b (read-term src port)])
 	 (define-values (l c tail-position) (port-next-location port))
-	 (decorate (list a b) (- tail-position position)))]
-      [(#\")
-       (let ([term (read-term src port)])
+	 (if (or (eof-object? a) (eof-object? b))
+	     eof
+	     (decorate (list a b) (- tail-position position))))]
+
+      [(#\~)
+       (let ([namec (read-char port)]
+	     [term (read-term src port)])
 	 (define-values (l c tail-position) (port-next-location port))
-	 (decorate `(%define ,(string->symbol (string (read-char port))) term)
-		   (- tail-position position)))]
-      [(#\.) (decorate `(%dot ,(read-char port)) 2)]
-      [(#\?) (decorate `(%question ,(read-char port)) 2)]
-      [(#\@) (decorate 'at 1)]
-      [(#\|) (decorate 'pipe 1)]
-      [(#\s) (decorate 's 1)]
-      [(#\k) (decorate 'k 1)]
-      [(#\i) (decorate 'i 1)]
-      [(#\d) (decorate 'd 1)]
-      [(#\r) (decorate `(%dot #\newline) 1)]
-      [(#\c) (decorate 'c 1)]
-      [(#\e) (decorate 'e 1)]
-      [(#\v) (decorate 'v 1)]
-      [else (error "parse error on" c)])]))
+	 (if (or (eof-object? namec) (eof-object? term))
+	     eof
+	     (decorate `(%define ,(string->symbol (string namec)) ,term)
+		       (- tail-position position))))]
+
+      [(#\.) (let ([c (read-char port)])
+	       (if (eof-object? c)
+		   eof
+		   (decorate `(%dot ,c) 2)))]
+
+      [(#\?) (let ([c (read-char port)])
+	       (if (eof-object? c)
+		   eof
+		   (decorate `(%question ,c) 2)))]
+
+      [else (decorate (string->symbol (string c)) 1)])]))

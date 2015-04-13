@@ -31,7 +31,7 @@
     (write-char c)
     x))
 (define r (%dot #\newline))
-(define (at x)
+(define (@ x)
   (let ([c (read-char)])
     (current-character c)
     (unlambda-app
@@ -48,7 +48,7 @@
 	 i
 	 v))))
 
-(define (pipe x)
+(define (\| x)
   (unlambda-app
    x
    (if (char? (current-character))
@@ -65,6 +65,8 @@
 
 (define-syntax (unlambda-module-begin stx)
   (syntax-case stx ()
+    [(_ )
+     #`(#%module-begin (void))]
     [(_ body ...)
      (let ([a-d-o (replace-context (car (syntax-e #'(body ...)))
 				   #'(all-defined-out))])
@@ -75,7 +77,8 @@
 (define-syntax-rule (unlambda-define name value)
   (define/contract name one-arg-lambda (procedure-rename value 'name)))
 
-(provide s k i d e v c r at pipe %dot %question #%datum all-defined-out
+(provide s k i d e v c r @ \| %dot %question #%datum all-defined-out
+	 #%top-interaction
          (rename-out [unlambda-app #%app]
                      [unlambda-module-begin #%module-begin]
 		     [unlambda-define %define]))
