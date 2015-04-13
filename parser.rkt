@@ -22,7 +22,7 @@
 	   (values #f 'string #f position (+ 2 position)))]
 
       [else
-       (values c 'symbol #f position (+ 1 position))])]))
+       (values (string c) 'symbol #f position (+ 1 position))])]))
 
 (define (read-term src [port (current-input-port)])
   (define-values (line column position) (port-next-location port))
