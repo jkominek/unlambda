@@ -13,6 +13,11 @@
     (values #f 'white-space #f position (+ 1 position))]
    [else
     (case c
+      [(#\#)
+       (read-line port)
+       (define-values (l c p) (port-next-location port))
+       (values #f 'comment #f position p)]
+      
       [(#\` #\~)
        (values #f 'parenthesis #f position (+ 1 position))]
 
@@ -36,6 +41,10 @@
    [(char-whitespace? c) (read-term src port)]
    [else
     (case c
+      [(#\#)
+       (read-line port)
+       (read-term src port)]
+
       [(#\`)
        (let ([a (read-term src port)]
 	     [b (read-term src port)])
